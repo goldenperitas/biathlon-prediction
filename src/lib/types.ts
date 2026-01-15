@@ -26,8 +26,7 @@ export interface BiathlonEvent {
   EventId: string;
   SeasonId: string;
   Organizer: string;
-  Place: string;
-  NatCode: string;
+  Nat: string;
   StartDate: string;
   EndDate: string;
   Level: number;

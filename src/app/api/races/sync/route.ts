@@ -46,7 +46,7 @@ export async function POST() {
           name: comp.Description,
           short_description: comp.ShortDescription,
           event_name: event.Description,
-          location: `${event.Place}, ${event.NatCode}`,
+          location: `${event.Organizer}, ${event.Nat}`,
           start_time: comp.StartTime,
         });
       }
