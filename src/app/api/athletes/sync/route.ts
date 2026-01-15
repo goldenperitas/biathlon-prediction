@@ -59,7 +59,7 @@ export async function POST() {
             given_name: result.GivenName,
             family_name: result.FamilyName,
             nationality: result.Nat,
-            gender: cup.CupId.includes("SWRLCP") ? "W" : "M",
+            gender: cup.CupId.slice(-4, -2) === "SW" ? "W" : "M",
           });
         }
       }

@@ -48,10 +48,10 @@ export default async function RaceDetailPage({
   const raceDate = new Date(race.start_time);
   const isPast = raceDate < new Date();
 
-  // Parse gender from short_description (ends with " M" or " W")
-  const raceGender = race.short_description?.endsWith(" M")
+  // Parse gender from short_description (starts with "Men" or "Women")
+  const raceGender = race.short_description?.startsWith("Men")
     ? "M"
-    : race.short_description?.endsWith(" W")
+    : race.short_description?.startsWith("Women")
       ? "W"
       : null;
 
