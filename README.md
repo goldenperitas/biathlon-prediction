@@ -1,4 +1,4 @@
-# Biathlon Prediction
+# Hit or Miss
 
 Predict biathlon podiums and compete with friends.
 

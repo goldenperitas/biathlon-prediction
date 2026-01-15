@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Biathlon Prediction",
+  title: "Hit or Miss",
   description: "Predict biathlon podiums and compete with friends",
 };
 
@@ -32,7 +32,7 @@ export default function RootLayout({
         <header className="border-b border-zinc-200 dark:border-zinc-800">
           <nav className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link href="/" className="font-semibold">
-              Biathlon Prediction
+              Hit or Miss
             </Link>
             <AuthButton />
           </nav>
