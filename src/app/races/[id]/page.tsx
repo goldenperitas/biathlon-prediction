@@ -54,7 +54,8 @@ export default async function RaceDetailPage({
     .single();
 
   const raceDate = new Date(race.start_time);
-  const isPast = raceDate < new Date();
+  const allowPastPredictions = process.env.NEXT_PUBLIC_ALLOW_PAST_PREDICTIONS === 'true';
+  const isPast = raceDate < new Date() && !allowPastPredictions;
 
   // Parse gender from short_description (starts with "Men" or "Women")
   const raceGender = race.short_description?.startsWith("Men")
@@ -78,6 +79,12 @@ export default async function RaceDetailPage({
       >
         ← Back to dashboard
       </Link>
+
+      {allowPastPredictions && raceDate < new Date() && (
+        <div className="mt-4 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-200 text-sm">
+          <span className="font-semibold">Test Mode:</span> Past predictions allowed
+        </div>
+      )}
 
       <div className="mt-6">
         <h1 className="text-2xl font-bold tracking-tight">

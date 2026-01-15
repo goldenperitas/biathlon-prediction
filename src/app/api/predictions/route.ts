@@ -47,8 +47,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Race not found" }, { status: 404 });
   }
 
-  // Check if race has already started
-  if (new Date(race.start_time) <= new Date()) {
+  // Check if race has already started (bypass in test mode)
+  const allowPastPredictions = process.env.NEXT_PUBLIC_ALLOW_PAST_PREDICTIONS === 'true';
+  if (new Date(race.start_time) <= new Date() && !allowPastPredictions) {
     return NextResponse.json(
       { error: "Cannot modify prediction after race has started" },
       { status: 400 }
