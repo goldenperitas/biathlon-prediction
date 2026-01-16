@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { BiathlonEvent, BiathlonCompetition } from "@/lib/types";
+import { syncRaceResults, calculateRaceScores } from "@/lib/sync-utils";
 
 const BIATHLON_API_BASE =
-  "http://biathlonresults.com/modules/sportapi/api";
+  "https://biathlonresults.com/modules/sportapi/api";
 
 export async function POST() {
   const supabase = await createClient();
@@ -62,9 +63,42 @@ export async function POST() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Find past races with predictions that need scoring
+    const { data: pastRacesWithPredictions } = await supabase
+      .from("races")
+      .select("id, external_id, short_description, results_synced_at")
+      .lt("start_time", new Date().toISOString())
+      .not("short_description", "ilike", "%relay%");
+
+    console.log(`[Sync] Found ${pastRacesWithPredictions?.length || 0} past non-relay races`);
+
+    let scoresCalculated = 0;
+
+    // For each past race, sync results and calculate scores if it has predictions
+    for (const race of pastRacesWithPredictions || []) {
+      const { count } = await supabase
+        .from("predictions")
+        .select("*", { count: "exact", head: true })
+        .eq("race_id", race.id);
+
+      if (count && count > 0) {
+        console.log(`[Sync] Race ${race.id} (${race.short_description}) has ${count} predictions`);
+        const syncResult = await syncRaceResults(supabase, race.id);
+        console.log(`[Sync] Results sync:`, syncResult);
+
+        const scoreResult = await calculateRaceScores(supabase, race.id);
+        console.log(`[Sync] Score calculation:`, scoreResult);
+
+        if (scoreResult.success && scoreResult.scores_calculated) {
+          scoresCalculated += scoreResult.scores_calculated;
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       count: allRaces.length,
+      scores_calculated: scoresCalculated,
     });
   } catch (error) {
     console.error("Sync error:", error);

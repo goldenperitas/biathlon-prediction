@@ -1,57 +1,23 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-const BIATHLON_API_BASE = "http://biathlonresults.com/modules/sportapi/api";
+const BIATHLON_API_BASE = "https://biathlonresults.com/modules/sportapi/api";
 
-interface ParsedResult {
-  ibu_id: string;
-  rank: number;
-  family_name: string;
-  given_name: string;
-  nationality: string;
-  total_time: string | null;
-  behind: string | null;
+interface ApiResult {
+  IBUId: string;
+  Rank: string;
+  FamilyName: string;
+  GivenName: string;
+  Nat: string;
+  TotalTime: string | null;
+  Behind: string | null;
 }
 
-function parseResultsXML(xml: string): ParsedResult[] {
-  const results: ParsedResult[] = [];
-
-  // Extract all ResultRow elements
-  const resultRowRegex = /<ResultRow>([\s\S]*?)<\/ResultRow>/g;
-  let match;
-
-  while ((match = resultRowRegex.exec(xml)) !== null) {
-    const rowXml = match[1];
-
-    // Extract fields from each row
-    const ibuId = rowXml.match(/<IBUId>([^<]+)<\/IBUId>/)?.[1];
-    const rank = rowXml.match(/<Rank>(\d+)<\/Rank>/)?.[1];
-    const familyName = rowXml.match(/<FamilyName>([^<]+)<\/FamilyName>/)?.[1];
-    const givenName = rowXml.match(/<GivenName>([^<]+)<\/GivenName>/)?.[1];
-    const nationality = rowXml.match(/<Nat>([^<]+)<\/Nat>/)?.[1];
-    const totalTime = rowXml.match(/<TotalTime>([^<]+)<\/TotalTime>/)?.[1];
-    const behind = rowXml.match(/<Behind>([^<]+)<\/Behind>/)?.[1];
-
-    // Only include results with valid rank (skip DNF/DNS without rank)
-    if (ibuId && rank) {
-      results.push({
-        ibu_id: ibuId,
-        rank: parseInt(rank, 10),
-        family_name: familyName || "",
-        given_name: givenName || "",
-        nationality: nationality || "",
-        total_time: totalTime || null,
-        behind: behind || null,
-      });
-    }
-  }
-
-  return results;
-}
-
-function isRelayRace(xml: string): boolean {
-  const shortDesc = xml.match(/<ShortDescription>([^<]+)<\/ShortDescription>/)?.[1] || "";
-  return shortDesc.toLowerCase().includes("relay");
+interface ResultsResponse {
+  Results: ApiResult[];
+  Competition?: {
+    ShortDescription?: string;
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -96,29 +62,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const xml = await response.text();
+    const data: ResultsResponse = await response.json();
+    const apiResults = data.Results || [];
 
     // Check if this is a relay race
-    const isRelay = isRelayRace(xml) || race.short_description?.toLowerCase().includes("relay");
+    const isRelay = data.Competition?.ShortDescription?.toLowerCase().includes("relay") ||
+                    race.short_description?.toLowerCase().includes("relay");
 
     if (isRelay) {
-      // For relay races, we'd need different parsing logic
-      // For now, return a message
       return NextResponse.json(
         { error: "Relay race results sync not yet implemented" },
         { status: 501 }
       );
     }
 
-    // Parse individual race results
-    const parsedResults = parseResultsXML(xml);
-
-    if (parsedResults.length === 0) {
+    if (apiResults.length === 0) {
       return NextResponse.json(
         { error: "No results found in API response" },
         { status: 404 }
       );
     }
+
+    // Map API results to our format
+    const parsedResults = apiResults
+      .filter((r) => r.IBUId && r.Rank)
+      .map((r) => ({
+        ibu_id: r.IBUId,
+        rank: parseInt(r.Rank, 10),
+        family_name: r.FamilyName || "",
+        given_name: r.GivenName || "",
+        nationality: r.Nat || "",
+        total_time: r.TotalTime || null,
+        behind: r.Behind || null,
+      }));
 
     // Get all athletes by IBU ID to map them
     const ibuIds = parsedResults.map((r) => r.ibu_id);

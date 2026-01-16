@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const BIATHLON_API_BASE = "http://biathlonresults.com/modules/sportapi/api";
+const BIATHLON_API_BASE = "https://biathlonresults.com/modules/sportapi/api";
 
 interface CupResultAthlete {
   IBUId: string;
