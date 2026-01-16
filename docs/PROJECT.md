@@ -1,4 +1,4 @@
-# Biathlon Prediction App
+# Hit or Miss App
 
 A fun side project to predict biathlon race podiums and compete with friends.
 
