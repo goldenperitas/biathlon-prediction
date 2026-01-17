@@ -35,6 +35,8 @@ export async function syncRaceResults(
     return { success: false, error: "Race not found" };
   }
 
+  const isRelay = race.short_description?.toLowerCase().includes("relay") ?? false;
+
   try {
     const response = await fetch(
       `${BIATHLON_API_BASE}/Results?RaceId=${race.external_id}`
@@ -51,47 +53,90 @@ export async function syncRaceResults(
       return { success: false, error: "No results found in API response" };
     }
 
-    // Map API results to our format
-    const parsedResults = apiResults
-      .filter((r) => r.IBUId && r.Rank)
-      .map((r) => ({
-        ibu_id: r.IBUId,
-        rank: parseInt(r.Rank, 10),
-        family_name: r.FamilyName || "",
-        given_name: r.GivenName || "",
-        nationality: r.Nat || "",
-        total_time: r.TotalTime || null,
-        behind: r.Behind || null,
-      }));
+    // Delete existing results first to avoid duplicate key errors
+    await supabase.from("race_results").delete().eq("race_id", race.id);
 
-    const ibuIds = parsedResults.map((r) => r.ibu_id);
-    const { data: athletes, error: athletesError } = await supabase
-      .from("athletes")
-      .select("id, ibu_id")
-      .in("ibu_id", ibuIds);
+    let raceResults: Array<{
+      race_id: string;
+      athlete_id: string | null;
+      country_code: string | null;
+      finish_position: number;
+      total_time: string | null;
+      behind: string | null;
+      status: string;
+    }>;
 
-    if (athletesError) {
-      return { success: false, error: athletesError.message };
-    }
+    if (isRelay) {
+      // For relay races, group by country (Nat) and use the best rank for each country
+      const countryResults = new Map<string, {
+        rank: number;
+        total_time: string | null;
+        behind: string | null;
+      }>();
 
-    const ibuToAthleteId = new Map<string, string>();
-    athletes?.forEach((a) => {
-      ibuToAthleteId.set(a.ibu_id, a.id);
-    });
+      for (const r of apiResults) {
+        if (!r.Nat || !r.Rank) continue;
+        const rank = parseInt(r.Rank, 10);
+        const existing = countryResults.get(r.Nat);
+        if (!existing || rank < existing.rank) {
+          countryResults.set(r.Nat, {
+            rank,
+            total_time: r.TotalTime || null,
+            behind: r.Behind || null,
+          });
+        }
+      }
 
-    const raceResults = parsedResults
-      .filter((r) => ibuToAthleteId.has(r.ibu_id))
-      .map((r) => ({
+      raceResults = Array.from(countryResults.entries()).map(([country, result]) => ({
         race_id: race.id,
-        athlete_id: ibuToAthleteId.get(r.ibu_id),
-        country_code: null,
-        finish_position: r.rank,
-        total_time: r.total_time,
-        behind: r.behind,
+        athlete_id: null,
+        country_code: country,
+        finish_position: result.rank,
+        total_time: result.total_time,
+        behind: result.behind,
         status: "finished",
       }));
+    } else {
+      // For non-relay races, map by athlete IBU ID
+      const parsedResults = apiResults
+        .filter((r) => r.IBUId && r.Rank)
+        .map((r) => ({
+          ibu_id: r.IBUId,
+          rank: parseInt(r.Rank, 10),
+          family_name: r.FamilyName || "",
+          given_name: r.GivenName || "",
+          nationality: r.Nat || "",
+          total_time: r.TotalTime || null,
+          behind: r.Behind || null,
+        }));
 
-    await supabase.from("race_results").delete().eq("race_id", race.id);
+      const ibuIds = parsedResults.map((r) => r.ibu_id);
+      const { data: athletes, error: athletesError } = await supabase
+        .from("athletes")
+        .select("id, ibu_id")
+        .in("ibu_id", ibuIds);
+
+      if (athletesError) {
+        return { success: false, error: athletesError.message };
+      }
+
+      const ibuToAthleteId = new Map<string, string>();
+      athletes?.forEach((a) => {
+        ibuToAthleteId.set(a.ibu_id, a.id);
+      });
+
+      raceResults = parsedResults
+        .filter((r) => ibuToAthleteId.has(r.ibu_id))
+        .map((r) => ({
+          race_id: race.id,
+          athlete_id: ibuToAthleteId.get(r.ibu_id)!,
+          country_code: null,
+          finish_position: r.rank,
+          total_time: r.total_time,
+          behind: r.behind,
+          status: "finished",
+        }));
+    }
 
     const { error: insertError } = await supabase
       .from("race_results")

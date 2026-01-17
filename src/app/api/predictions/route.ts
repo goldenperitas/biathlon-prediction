@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
         *,
         athlete:athletes(*)
       ),
-      score:prediction_scores(*)
+      score:prediction_scores!fk_prediction_scores_prediction!left(*)
     `)
     .eq("user_id", user.id)
     .eq("race_id", raceId)

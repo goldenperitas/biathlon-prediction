@@ -8,6 +8,7 @@ export interface Race {
   location: string | null;
   start_time: string;
   status: "upcoming" | "in_progress" | "completed";
+  results_synced_at: string | null;
   created_at: string;
 }
 

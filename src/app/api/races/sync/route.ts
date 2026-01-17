@@ -63,14 +63,13 @@ export async function POST() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Find past races with predictions that need scoring
+    // Find past races with predictions that need scoring (including relay races)
     const { data: pastRacesWithPredictions } = await supabase
       .from("races")
       .select("id, external_id, short_description, results_synced_at")
-      .lt("start_time", new Date().toISOString())
-      .not("short_description", "ilike", "%relay%");
+      .lt("start_time", new Date().toISOString());
 
-    console.log(`[Sync] Found ${pastRacesWithPredictions?.length || 0} past non-relay races`);
+    console.log(`[Sync] Found ${pastRacesWithPredictions?.length || 0} past races with predictions`);
 
     let scoresCalculated = 0;
 

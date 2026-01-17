@@ -65,16 +65,11 @@ export async function POST(request: NextRequest) {
     const data: ResultsResponse = await response.json();
     const apiResults = data.Results || [];
 
-    // Check if this is a relay race
+    // Check if this is a relay race (but don't reject - use sync-utils which handles both)
     const isRelay = data.Competition?.ShortDescription?.toLowerCase().includes("relay") ||
                     race.short_description?.toLowerCase().includes("relay");
-
-    if (isRelay) {
-      return NextResponse.json(
-        { error: "Relay race results sync not yet implemented" },
-        { status: 501 }
-      );
-    }
+    
+    // Note: Relay race sync is now handled by syncRaceResults in sync-utils.ts
 
     if (apiResults.length === 0) {
       return NextResponse.json(
