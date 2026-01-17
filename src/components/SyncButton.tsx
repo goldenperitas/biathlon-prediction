@@ -18,7 +18,8 @@ export function SyncButton() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(`Synced ${data.count} races`);
+        const scoresMsg = data.scores_calculated ? `, ${data.scores_calculated} scores calculated` : '';
+        setMessage(`Synced ${data.count} races${scoresMsg}`);
         router.refresh();
       } else {
         setMessage(data.error || "Sync failed");

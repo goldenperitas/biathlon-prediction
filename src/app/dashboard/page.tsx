@@ -2,11 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SyncButton } from "@/components/SyncButton";
+import { BiathlonTargets } from "@/components/BiathlonTargets";
+import { TimezoneLabel } from "@/components/TimezoneLabel";
+import { LocalTime } from "@/components/LocalTime";
 import type { Race } from "@/lib/types";
 
 interface PredictionWithScore {
   race_id: string;
-  score: Array<{ hits: number; total_score: number }> | null;
+  score: Array<{ hits: number; total_score: number }> | { hits: number; total_score: number } | null;
 }
 
 export default async function DashboardPage() {
@@ -40,9 +43,9 @@ export default async function DashboardPage() {
     .from("predictions")
     .select(`
       race_id,
-      score:prediction_scores(hits, total_score)
+      score:prediction_scores!fk_prediction_scores_prediction!left(hits, total_score)
     `)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id) as { data: PredictionWithScore[] | null };
 
   const predictionMap = new Map<string, PredictionWithScore>(
     predictions?.map((p) => [p.race_id, p]) || []
@@ -63,6 +66,7 @@ export default async function DashboardPage() {
       {/* Upcoming Races */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold mb-4">Upcoming Races</h2>
+        <TimezoneLabel />
         {upcomingRaces && upcomingRaces.length > 0 ? (
           <div className="space-y-3">
             {(upcomingRaces as Race[]).map((race) => {
@@ -76,37 +80,34 @@ export default async function DashboardPage() {
                   className="block p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`mt-1 ${hasPrediction ? "text-green-600" : "text-zinc-300 dark:text-zinc-600"}`}
-                        title={hasPrediction ? "Prediction submitted" : "No prediction yet"}
-                      >
-                        {hasPrediction ? (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex-1">
+                      <h3 className="font-medium">{race.short_description}</h3>
+                      <p className="text-sm text-zinc-500 mt-1">
+                        {race.location}
+                        <LocalTime
+                          timestamp={race.start_time}
+                          format="short-date"
+                          className="ml-2"
+                        />
+                      </p>
+                    </div>
+                    <div className="ml-4 pt-1 text-right">
+                      {hasPrediction ? (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                        ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          Predicted
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm font-medium bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="9" strokeWidth={2} />
                           </svg>
-                        )}
-                      </span>
-                      <div>
-                        <h3 className="font-medium">{race.short_description}</h3>
-                        <p className="text-sm text-zinc-500 mt-1">
-                          {race.location}
-                        </p>
-                      </div>
+                          No prediction
+                        </span>
+                      )}
                     </div>
-                    <time className="text-sm text-zinc-500">
-                      {new Date(race.start_time).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </time>
                   </div>
                 </Link>
               );
@@ -125,10 +126,24 @@ export default async function DashboardPage() {
       {pastRaces && pastRaces.length > 0 && (
         <section className="mt-8">
           <h2 className="text-lg font-semibold mb-4">Recent Results</h2>
+          <TimezoneLabel />
           <div className="space-y-3">
             {(pastRaces as Race[]).map((race) => {
               const prediction = predictionMap.get(race.id);
-              const score = prediction?.score?.[0];
+              // Handle score as either array or object (Supabase one-to-one returns object)
+              // When no match, Supabase returns null, but typeof null === "object" in JavaScript
+              const rawScore = prediction?.score;
+              let score: { hits: number; total_score: number } | null = null;
+              
+              if (rawScore !== null && rawScore !== undefined) {
+                if (Array.isArray(rawScore)) {
+                  score = rawScore[0] || null;
+                } else if (typeof rawScore === 'object' && rawScore !== null && 'hits' in rawScore && 'total_score' in rawScore) {
+                  // Valid score object with required properties
+                  score = rawScore as { hits: number; total_score: number };
+                }
+                // If rawScore is {} (empty object), score remains null
+              }
 
               return (
                 <Link
@@ -137,48 +152,33 @@ export default async function DashboardPage() {
                   className="block p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      {/* Score badge or no prediction indicator */}
+                    <div className="flex-1">
+                      <h3 className="font-medium">{race.short_description}</h3>
+                      <p className="text-sm text-zinc-500 mt-1">
+                        {race.location}
+                        <LocalTime
+                          timestamp={race.start_time}
+                          format="short-date"
+                          className="ml-2"
+                        />
+                      </p>
+                    </div>
+                    <div className="ml-4 pt-1 text-right">
                       {score ? (
-                        <div
-                          className={`mt-0.5 px-2 py-1 rounded text-sm font-bold ${
-                            score.hits >= 4
-                              ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                              : score.hits >= 2
-                                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                                : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                          }`}
-                          title={`${score.total_score} points`}
-                        >
-                          {score.hits}/5
-                        </div>
+                        <BiathlonTargets hits={score.hits} totalScore={score.total_score} />
                       ) : prediction ? (
-                        <div className="mt-0.5 px-2 py-1 rounded text-sm font-medium bg-zinc-100 text-zinc-500 dark:bg-zinc-800">
-                          Pending
+                        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Predicted
                         </div>
                       ) : (
-                        <div className="mt-0.5 px-2 py-1 rounded text-sm text-zinc-400">
-                          —
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-medium">{race.short_description}</h3>
-                        <p className="text-sm text-zinc-500 mt-1">
-                          {race.location}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <time className="text-sm text-zinc-500">
-                        {new Date(race.start_time).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </time>
-                      {score && (
-                        <div className="text-sm font-medium mt-1">
-                          {score.total_score} pts
+                        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm font-medium bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                          </svg>
+                          No prediction
                         </div>
                       )}
                     </div>
