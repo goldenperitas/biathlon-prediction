@@ -3,33 +3,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SyncButton } from "@/components/SyncButton";
 import { BiathlonTargets } from "@/components/BiathlonTargets";
+import { TimezoneLabel } from "@/components/TimezoneLabel";
+import { LocalTime } from "@/components/LocalTime";
 import type { Race } from "@/lib/types";
 
 interface PredictionWithScore {
   race_id: string;
   score: Array<{ hits: number; total_score: number }> | { hits: number; total_score: number } | null;
-}
-
-// Helper function to extract timezone from ISO string or determine from location
-function getTimezoneLabel(startTime: string, location: string | null): string {
-  try {
-    const date = new Date(startTime);
-    // Check if ISO string includes timezone offset (e.g., +01:00, -05:00)
-    const isoMatch = startTime.match(/[+-]\d{2}:\d{2}$/);
-    if (isoMatch) {
-      // Format timezone offset (e.g., "+01:00" -> "UTC+1")
-      const offset = isoMatch[0];
-      const hours = parseInt(offset.substring(1, 3), 10);
-      const sign = offset[0] === '+' ? '+' : '-';
-      return `UTC${sign}${hours}`;
-    }
-    // Try to get timezone from date object using Intl API
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return timeZone;
-  } catch {
-    // Fallback to UTC if parsing fails
-    return 'UTC';
-  }
 }
 
 export default async function DashboardPage() {
@@ -86,16 +66,12 @@ export default async function DashboardPage() {
       {/* Upcoming Races */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold mb-4">Upcoming Races</h2>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
-          All times are in UTC
-        </p>
+        <TimezoneLabel />
         {upcomingRaces && upcomingRaces.length > 0 ? (
           <div className="space-y-3">
             {(upcomingRaces as Race[]).map((race) => {
               const prediction = predictionMap.get(race.id);
               const hasPrediction = !!prediction;
-              const timezone = getTimezoneLabel(race.start_time, race.location);
-              const raceDate = new Date(race.start_time);
 
               return (
                 <Link
@@ -108,18 +84,14 @@ export default async function DashboardPage() {
                       <h3 className="font-medium">{race.short_description}</h3>
                       <p className="text-sm text-zinc-500 mt-1">
                         {race.location}
-                        <span className="ml-2">
-                          {raceDate.toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
+                        <LocalTime
+                          timestamp={race.start_time}
+                          format="short-date"
+                          className="ml-2"
+                        />
                       </p>
                     </div>
-                    <div className="ml-4 text-right">
+                    <div className="ml-4 pt-1 text-right">
                       {hasPrediction ? (
                         <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,9 +126,7 @@ export default async function DashboardPage() {
       {pastRaces && pastRaces.length > 0 && (
         <section className="mt-8">
           <h2 className="text-lg font-semibold mb-4">Recent Results</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
-            All times are in {timezone}
-          </p>
+          <TimezoneLabel />
           <div className="space-y-3">
             {(pastRaces as Race[]).map((race) => {
               const prediction = predictionMap.get(race.id);
@@ -175,9 +145,6 @@ export default async function DashboardPage() {
                 // If rawScore is {} (empty object), score remains null
               }
 
-              const timezone = getTimezoneLabel(race.start_time, race.location);
-              const raceDate = new Date(race.start_time);
-
               return (
                 <Link
                   key={race.id}
@@ -189,16 +156,14 @@ export default async function DashboardPage() {
                       <h3 className="font-medium">{race.short_description}</h3>
                       <p className="text-sm text-zinc-500 mt-1">
                         {race.location}
-                        <span className="ml-2">
-                          {raceDate.toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
+                        <LocalTime
+                          timestamp={race.start_time}
+                          format="short-date"
+                          className="ml-2"
+                        />
                       </p>
                     </div>
-                    <div className="ml-4 text-right">
+                    <div className="ml-4 pt-1 text-right">
                       {score ? (
                         <BiathlonTargets hits={score.hits} totalScore={score.total_score} />
                       ) : prediction ? (

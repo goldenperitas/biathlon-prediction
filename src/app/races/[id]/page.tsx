@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { PredictionForm } from "./PredictionForm";
 import Link from "next/link";
 import { BiathlonTargets } from "@/components/BiathlonTargets";
+import { LocalTime } from "@/components/LocalTime";
 import { calculatePredictionResults } from "@/lib/scoring";
 import type { Prediction, PredictionTarget, Athlete, RaceResult } from "@/lib/types";
 
@@ -104,16 +105,11 @@ export default async function RaceDetailPage({
           {race.short_description}
         </h1>
         <p className="mt-1 text-zinc-500">{race.location}</p>
-        <p className="mt-1 text-sm text-zinc-400">
-          {raceDate.toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
+        <LocalTime
+          timestamp={race.start_time}
+          format="long"
+          className="mt-1 text-sm text-zinc-400 block"
+        />
       </div>
 
       {/* Your Results section - only show if there's a score */}
