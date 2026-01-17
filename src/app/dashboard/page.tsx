@@ -45,7 +45,7 @@ export default async function DashboardPage() {
       race_id,
       score:prediction_scores!fk_prediction_scores_prediction!left(hits, total_score)
     `)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id) as { data: PredictionWithScore[] | null };
 
   const predictionMap = new Map<string, PredictionWithScore>(
     predictions?.map((p) => [p.race_id, p]) || []

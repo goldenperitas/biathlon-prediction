@@ -7,6 +7,11 @@ import { LocalTime } from "@/components/LocalTime";
 import { calculatePredictionResults } from "@/lib/scoring";
 import type { Prediction, PredictionTarget, Athlete, RaceResult } from "@/lib/types";
 
+interface PredictionWithDetails extends Omit<Prediction, 'score' | 'targets'> {
+  targets: (PredictionTarget & { athlete?: Athlete })[];
+  score: { hits: number; total_score: number } | { hits: number; total_score: number }[] | null;
+}
+
 function formatOrdinal(n: number) {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
@@ -53,7 +58,7 @@ export default async function RaceDetailPage({
     `)
     .eq("race_id", id)
     .eq("user_id", user.id)
-    .single();
+    .single() as { data: PredictionWithDetails | null };
 
   // Fetch race results (for displaying hit/miss info)
   const { data: raceResults } = await supabase
