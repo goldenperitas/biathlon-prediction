@@ -188,7 +188,6 @@ export default async function RaceDetailPage({
                       countryCode={result.country_code}
                       predictedPosition={result.predicted_position}
                       extraRounds={result.extra_rounds}
-                      disabled
                       result={result}
                     />
                   ))}

@@ -102,6 +102,23 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
   const canIncrementExtraRounds =
     canEdit && (remainingExtraRounds === undefined || remainingExtraRounds > 0);
 
+  const pointsTextClassName =
+    result && result.points_earned > 0
+      ? "text-green-700 dark:text-green-400"
+      : "text-zinc-400 dark:text-zinc-500";
+
+  /**
+   * Computes styling for the left “position circle” based on result status.
+   * @param status - Per-target status (precise/hit/miss/pending)
+   * @returns Tailwind class string applied to the position circle container
+   */
+  const positionCircleClassName = (status: typeof resultsStatus) => {
+    if (mode === "results" && status === "miss") {
+      return "bg-zinc-900 text-white border-5 border-red-900 shadow-sm";
+    }
+    return "bg-white text-zinc-900 border border-zinc-200 shadow-sm";
+  };
+
   return (
     <div
       className={`border-2 rounded-xl p-4 transition-all ${rowAccent} ${
@@ -118,7 +135,11 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
           </div>
 
           <div className="mt-2 w-full flex items-center justify-center sm:justify-start gap-3">
-            <div className="relative w-20 h-20 rounded-full bg-white text-zinc-900 flex items-center justify-center shadow-sm border border-zinc-200 flex-shrink-0">
+            <div
+              className={`relative w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0 ${positionCircleClassName(
+                resultsStatus
+              )}`}
+            >
               <span className="text-2xl font-bold tabular-nums">
                 {predictedPosition}
               </span>
@@ -155,7 +176,7 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
               <div className="flex flex-col items-end gap-1 flex-shrink-0">
                 <BiathlonStatusPill status={resultsStatus} />
                 {result && (
-                  <div className="text-sm font-semibold text-green-700 dark:text-green-400">
+                  <div className={`text-sm font-semibold ${pointsTextClassName}`}>
                     <span>
                       {result.points_earned > 0 ? `+${result.points_earned} pts` : "0 pts"}
                     </span>
