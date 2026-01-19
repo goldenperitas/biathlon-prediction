@@ -26,7 +26,7 @@ export function BiathlonTargets({ hits, totalScore, className = "" }: BiathlonTa
               className={`w-5 h-5 rounded-full ${
                 isHit
                   ? "bg-white"
-                  : "bg-zinc-900 border-4 border-red-950"
+                  : "bg-zinc-900 border-1 border-white"
               }`}
               title={isHit ? "Hit" : "Missed"}
             />
