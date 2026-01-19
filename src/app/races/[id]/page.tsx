@@ -249,8 +249,6 @@ export default async function RaceDetailPage({
         </div>
       ) : (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Your Prediction</h2>
-
           {isPast ? (
             <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900">
               <span className="text-zinc-500 block mb-4">

@@ -95,7 +95,7 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
     if (pendingLabel) return pendingLabel;
     if (isRelay) return countryCode || "—";
     if (athlete) return `${athlete.given_name} ${athlete.family_name}`;
-    return "Unknown";
+    return "(Athlete not selected)";
   })();
 
   const canEdit = mode === "edit" && !disabled;
@@ -111,24 +111,27 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
       <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-4 items-start">
         {/* Left column: visualization */}
         <div className="flex flex-col items-center sm:items-start">
-          <div className="relative w-28 h-28 rounded-full bg-white text-zinc-900 flex items-center justify-center shadow-sm border border-zinc-200">
-            <span className="text-3xl font-bold tabular-nums">
+          <div className="w-full text-center sm:text-left">
+            <span className="text-sm font-semibold text-zinc-500">
+              Target {targetNumber} of 5
+            </span>
+          </div>
+
+          <div className="relative w-20 h-20 rounded-full bg-white text-zinc-900 flex items-center justify-center shadow-sm border border-zinc-200 mt-2">
+            <span className="text-2xl font-bold tabular-nums">
               {predictedPosition}
             </span>
-            <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-bold border-2 border-white">
-              {targetNumber}
-            </div>
           </div>
 
           <div className="mt-3 w-full">
             <BiathlonAmmoBelt count={extraRounds} />
           </div>
 
-          <div className="mt-2 text-xs text-zinc-500 w-full">
-            <span className="font-medium">Hit range:</span>{" "}
-            <span className="tabular-nums">
+          <div className="mt-3 w-full text-center sm:text-left">
+            <div className="text-xs text-zinc-500">Hit Range</div>
+            <div className="text-base font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">
               {formatOrdinal(min)} – {formatOrdinal(max)}
-            </span>
+            </div>
           </div>
         </div>
 

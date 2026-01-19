@@ -25,15 +25,15 @@ export function BiathlonAmmoBelt({ count, className = "" }: BiathlonAmmoBeltProp
       className={`overflow-x-auto max-w-full ${className}`}
       aria-label={`${bullets} extra rounds`}
     >
-      <div className="flex items-center gap-1 w-max pr-1">
+      <div className="flex items-end gap-1.5 w-max pr-1">
         {Array.from({ length: bullets }, (_, i) => (
           <div
             key={i}
-            className="flex items-center"
+            className="flex flex-col items-center"
             title="Extra round"
           >
-            <div className="h-3 w-5 rounded-full bg-amber-500/90 border border-amber-700 shadow-sm" />
-            <div className="-ml-1 h-3 w-2 rounded-r-full bg-zinc-900/90 border border-zinc-950 shadow-sm" />
+            <div className="w-2.5 h-6 rounded-full bg-amber-500/90 border border-amber-700 shadow-sm" />
+            <div className="w-3 h-1.5 -mt-0.5 rounded-sm bg-zinc-900/90 border border-zinc-950 shadow-sm" />
           </div>
         ))}
       </div>
