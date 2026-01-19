@@ -117,21 +117,21 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
             </span>
           </div>
 
-          <div className="relative w-20 h-20 rounded-full bg-white text-zinc-900 flex items-center justify-center shadow-sm border border-zinc-200 mt-2">
-            <span className="text-2xl font-bold tabular-nums">
-              {predictedPosition}
-            </span>
-          </div>
+          <div className="mt-2 w-full flex items-center justify-center sm:justify-start gap-3">
+            <div className="relative w-20 h-20 rounded-full bg-white text-zinc-900 flex items-center justify-center shadow-sm border border-zinc-200 flex-shrink-0">
+              <span className="text-2xl font-bold tabular-nums">
+                {predictedPosition}
+              </span>
+            </div>
 
-          <div className="mt-3 w-full">
             <BiathlonAmmoBelt count={extraRounds} />
           </div>
 
           <div className="mt-3 w-full text-center sm:text-left">
-            <div className="text-xs text-zinc-500">Hit Range</div>
-            <div className="text-base font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">
+            <span className="text-xs text-zinc-500 me-2">Hit Range</span>
+            <span className="text-base font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">
               {formatOrdinal(min)} – {formatOrdinal(max)}
-            </div>
+            </span>
           </div>
         </div>
 
@@ -142,7 +142,7 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
               <div className="font-semibold truncate">
                 <span>{displayName}</span>
               </div>
-              {mode === "results" && result?.actual_position !== null && (
+              {mode === "results" && result && result.actual_position !== null && (
                 <div className="text-sm text-zinc-500 mt-0.5">
                   <span>
                     Actual: {formatOrdinal(result.actual_position)}

@@ -131,7 +131,7 @@ export function PredictionForm({
           </div>
 
           <div className="text-right flex-shrink-0">
-            <span className="text-xs text-zinc-500 block">Ammo remaining</span>
+            <span className="text-xs text-zinc-500 block">Extra rounds remaining</span>
             <span
               className={`text-2xl font-bold tabular-nums ${
                 remainingExtraRounds === 0

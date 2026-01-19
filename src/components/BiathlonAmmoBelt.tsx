@@ -4,13 +4,40 @@ interface BiathlonAmmoBeltProps {
 }
 
 /**
- * Renders extra rounds as a horizontal, scrollable "ammo belt".
+ * Renders extra rounds as a vertical stack of 2D bullet silhouettes.
  * @param count - Number of bullets to render (>= 0)
  * @param className - Optional additional CSS classes
  * @returns JSX element representing an ammo belt
  */
 export function BiathlonAmmoBelt({ count, className = "" }: BiathlonAmmoBeltProps) {
   const bullets = Math.max(0, Math.floor(count));
+
+  /**
+   * Renders a single bullet icon (pointy tip on the left, flat base on the right).
+   * @param key - React list key
+   * @returns JSX element representing one extra round
+   */
+  const renderBullet = (key: number) => (
+    <div key={key} className="flex items-center" title="Extra round">
+      <svg
+        width="56"
+        height="12"
+        viewBox="0 0 72 14"
+        className="block"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path
+          // Left is triangular with a tiny flat/chamfered tip; right is flat.
+          d="M22 1 H71 V13 H22 L1.5 7.8 V6.2 L22 1 Z"
+          className="fill-white stroke-zinc-300 dark:stroke-zinc-600"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+          shapeRendering="geometricPrecision"
+        />
+      </svg>
+    </div>
+  );
 
   if (bullets === 0) {
     return (
@@ -22,20 +49,11 @@ export function BiathlonAmmoBelt({ count, className = "" }: BiathlonAmmoBeltProp
 
   return (
     <div
-      className={`overflow-x-auto max-w-full ${className}`}
+      className={`max-w-full ${className}`}
       aria-label={`${bullets} extra rounds`}
     >
-      <div className="flex items-end gap-1.5 w-max pr-1">
-        {Array.from({ length: bullets }, (_, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center"
-            title="Extra round"
-          >
-            <div className="w-2.5 h-6 rounded-full bg-amber-500/90 border border-amber-700 shadow-sm" />
-            <div className="w-3 h-1.5 -mt-0.5 rounded-sm bg-zinc-900/90 border border-zinc-950 shadow-sm" />
-          </div>
-        ))}
+      <div className="flex flex-col gap-1.5">
+        {Array.from({ length: bullets }, (_, i) => renderBullet(i))}
       </div>
     </div>
   );
