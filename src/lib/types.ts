@@ -52,8 +52,8 @@ export interface PredictionTarget {
   target_number: 1 | 2 | 3 | 4 | 5;
   athlete_id: string | null;
   country_code: string | null;
-  predicted_position: number; // 1-30
-  extra_rounds: number; // 0-10
+  predicted_position: number; // 1-120
+  extra_rounds: number; // 0-15
   created_at: string;
   // Joined data
   athlete?: Athlete;

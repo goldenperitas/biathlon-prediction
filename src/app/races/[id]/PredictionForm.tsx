@@ -16,11 +16,11 @@ interface TargetState {
 }
 
 const createInitialTargets = (): TargetState[] => [
-  { targetNumber: 1, athlete: null, countryCode: null, predictedPosition: 1, extraRounds: 2 },
-  { targetNumber: 2, athlete: null, countryCode: null, predictedPosition: 2, extraRounds: 2 },
-  { targetNumber: 3, athlete: null, countryCode: null, predictedPosition: 3, extraRounds: 2 },
-  { targetNumber: 4, athlete: null, countryCode: null, predictedPosition: 4, extraRounds: 2 },
-  { targetNumber: 5, athlete: null, countryCode: null, predictedPosition: 5, extraRounds: 2 },
+  { targetNumber: 1, athlete: null, countryCode: null, predictedPosition: 1, extraRounds: 3 },
+  { targetNumber: 2, athlete: null, countryCode: null, predictedPosition: 2, extraRounds: 3 },
+  { targetNumber: 3, athlete: null, countryCode: null, predictedPosition: 3, extraRounds: 3 },
+  { targetNumber: 4, athlete: null, countryCode: null, predictedPosition: 4, extraRounds: 3 },
+  { targetNumber: 5, athlete: null, countryCode: null, predictedPosition: 5, extraRounds: 3 },
 ];
 
 interface PredictionFormProps {

@@ -53,7 +53,7 @@ CREATE TABLE prediction_targets (
   athlete_id UUID REFERENCES athletes(id),
   country_code VARCHAR(3),
   predicted_position INTEGER NOT NULL CHECK (predicted_position BETWEEN 1 AND 120),
-  extra_rounds INTEGER NOT NULL DEFAULT 0 CHECK (extra_rounds >= 0 AND extra_rounds <= 10),
+  extra_rounds INTEGER NOT NULL DEFAULT 0 CHECK (extra_rounds >= 0 AND extra_rounds <= 15),
   created_at TIMESTAMPTZ DEFAULT NOW(),
 
   CONSTRAINT unique_prediction_target UNIQUE (prediction_id, target_number),
