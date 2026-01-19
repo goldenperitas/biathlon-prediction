@@ -114,7 +114,7 @@ export function BiathlonPredictionRow(props: BiathlonPredictionRowProps) {
    */
   const positionCircleClassName = (status: typeof resultsStatus) => {
     if (mode === "results" && status === "miss") {
-      return "bg-zinc-900 text-white border-5 border-red-900 shadow-sm";
+      return "bg-zinc-900 text-white shadow-sm";
     }
     return "bg-white text-zinc-900 border border-zinc-200 shadow-sm";
   };

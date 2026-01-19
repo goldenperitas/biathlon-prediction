@@ -5,7 +5,7 @@ interface BiathlonTargetsProps {
 }
 
 /**
- * Displays biathlon targets as circles (white for hits, black with white border for misses)
+ * Displays biathlon targets as circles (white for hits, black with thick red border for misses)
  * @param hits - Number of hits (0-5)
  * @param totalScore - Optional total score to display below targets
  * @param className - Optional additional CSS classes
@@ -26,7 +26,7 @@ export function BiathlonTargets({ hits, totalScore, className = "" }: BiathlonTa
               className={`w-5 h-5 rounded-full ${
                 isHit
                   ? "bg-white"
-                  : "bg-black border border-white"
+                  : "bg-zinc-900 border-4 border-red-950"
               }`}
               title={isHit ? "Hit" : "Missed"}
             />
