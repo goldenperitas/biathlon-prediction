@@ -1,7 +1,7 @@
 import type { PredictionTarget, RaceResult, TargetResult } from "./types";
 
 export const TOTAL_TARGETS = 5;
-export const TOTAL_EXTRA_ROUNDS = 10;
+export const TOTAL_EXTRA_ROUNDS = 15;
 export const MAX_POSITION = 120;
 export const PRECISE_HIT_POINTS = 100;
 export const RANGE_HIT_POINTS = 50;
@@ -165,7 +165,7 @@ export function validatePredictionTargets(
     return { valid: false, error: "Target numbers must be 1, 2, 3, 4, 5" };
   }
 
-  // Sum of extra rounds must equal 10
+  // Sum of extra rounds must equal 15
   const totalRounds = targets.reduce((sum, t) => sum + t.extra_rounds, 0);
   if (totalRounds !== TOTAL_EXTRA_ROUNDS) {
     return {
@@ -184,7 +184,7 @@ export function validatePredictionTargets(
       };
     }
 
-    // Extra rounds must be 0-10
+    // Extra rounds must be 0-15
     if (target.extra_rounds < 0 || target.extra_rounds > TOTAL_EXTRA_ROUNDS) {
       return {
         valid: false,

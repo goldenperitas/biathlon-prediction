@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TargetSelector } from "@/components/TargetSelector";
-import { ExtraRoundsDistributor } from "@/components/ExtraRoundsDistributor";
+import { BiathlonPredictionRow } from "@/components/BiathlonPredictionRow";
 import { TOTAL_EXTRA_ROUNDS, TOTAL_TARGETS } from "@/lib/scoring";
 import type { Athlete, PredictionTarget } from "@/lib/types";
 
@@ -16,11 +15,11 @@ interface TargetState {
 }
 
 const createInitialTargets = (): TargetState[] => [
-  { targetNumber: 1, athlete: null, countryCode: null, predictedPosition: 1, extraRounds: 2 },
-  { targetNumber: 2, athlete: null, countryCode: null, predictedPosition: 2, extraRounds: 2 },
-  { targetNumber: 3, athlete: null, countryCode: null, predictedPosition: 3, extraRounds: 2 },
-  { targetNumber: 4, athlete: null, countryCode: null, predictedPosition: 4, extraRounds: 2 },
-  { targetNumber: 5, athlete: null, countryCode: null, predictedPosition: 5, extraRounds: 2 },
+  { targetNumber: 1, athlete: null, countryCode: null, predictedPosition: 1, extraRounds: 3 },
+  { targetNumber: 2, athlete: null, countryCode: null, predictedPosition: 2, extraRounds: 3 },
+  { targetNumber: 3, athlete: null, countryCode: null, predictedPosition: 3, extraRounds: 3 },
+  { targetNumber: 4, athlete: null, countryCode: null, predictedPosition: 4, extraRounds: 3 },
+  { targetNumber: 5, athlete: null, countryCode: null, predictedPosition: 5, extraRounds: 3 },
 ];
 
 interface PredictionFormProps {
@@ -65,6 +64,7 @@ export function PredictionForm({
     isRelay ? t.countryCode !== null : t.athlete !== null
   );
   const totalExtraRounds = targets.reduce((sum, t) => sum + t.extraRounds, 0);
+  const remainingExtraRounds = TOTAL_EXTRA_ROUNDS - totalExtraRounds;
   const isValid = allTargetsSelected && totalExtraRounds === TOTAL_EXTRA_ROUNDS;
 
   // Update a single target
@@ -119,28 +119,41 @@ export function PredictionForm({
     }
   };
 
-  // Build distributor data
-  const distributorTargets = targets.map((t) => ({
-    targetNumber: t.targetNumber,
-    extraRounds: t.extraRounds,
-    predictedPosition: t.predictedPosition,
-    hasSelection: isRelay ? t.countryCode !== null : t.athlete !== null,
-    label: isRelay
-      ? t.countryCode || ""
-      : t.athlete
-        ? `${t.athlete.given_name} ${t.athlete.family_name}`
-        : "",
-  }));
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Target selectors */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg">Select 5 Targets</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-lg">Lock on your targets</h3>
+            <span className="text-sm text-zinc-500 block">
+              Pick 5 targets, set their finish positions, and load exactly {TOTAL_EXTRA_ROUNDS} rounds.
+            </span>
+          </div>
+
+          <div className="text-right flex-shrink-0">
+            <span className="text-xs text-zinc-500 block">Extra rounds remaining</span>
+            <span
+              className={`text-2xl font-bold tabular-nums ${
+                remainingExtraRounds === 0
+                  ? "text-green-700 dark:text-green-400"
+                  : remainingExtraRounds < 0
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-zinc-900 dark:text-zinc-100"
+              }`}
+            >
+              {remainingExtraRounds}
+            </span>
+            <span className="text-xs text-zinc-500">
+              / {TOTAL_EXTRA_ROUNDS}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
           {targets.map((target) => (
-            <TargetSelector
+            <BiathlonPredictionRow
               key={target.targetNumber}
+              mode="edit"
               targetNumber={target.targetNumber}
               isRelay={isRelay}
               gender={gender ?? undefined}
@@ -148,6 +161,8 @@ export function PredictionForm({
               countryCode={target.countryCode}
               predictedPosition={target.predictedPosition}
               extraRounds={target.extraRounds}
+              remainingExtraRounds={remainingExtraRounds}
+              disabled={loading}
               onAthleteChange={(athlete) =>
                 updateTarget(target.targetNumber, { athlete })
               }
@@ -157,33 +172,23 @@ export function PredictionForm({
               onPositionChange={(predictedPosition) =>
                 updateTarget(target.targetNumber, { predictedPosition })
               }
-              disabled={loading}
+              onExtraRoundsChange={(extraRounds) =>
+                updateTarget(target.targetNumber, { extraRounds })
+              }
             />
           ))}
         </div>
       </div>
 
-      {/* Extra rounds distributor */}
-      <div>
-        <h3 className="font-semibold text-lg mb-4">Distribute Extra Rounds</h3>
-        <ExtraRoundsDistributor
-          targets={distributorTargets}
-          onDistribute={(targetNumber, rounds) =>
-            updateTarget(targetNumber, { extraRounds: rounds })
-          }
-          disabled={loading}
-        />
-      </div>
-
       {/* Error/Success messages */}
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <span className="text-sm text-red-600 dark:text-red-400 block">{error}</span>
       )}
 
       {success && (
-        <p className="text-sm text-green-600 dark:text-green-400">
+        <span className="text-sm text-green-600 dark:text-green-400 block">
           Prediction saved!
-        </p>
+        </span>
       )}
 
       {/* Submit button */}
@@ -201,11 +206,11 @@ export function PredictionForm({
 
       {/* Validation hint */}
       {!isValid && (
-        <p className="text-sm text-zinc-500 text-center">
+        <span className="text-sm text-zinc-500 text-center block">
           {!allTargetsSelected
             ? "Select all 5 targets to continue"
             : `Distribute all ${TOTAL_EXTRA_ROUNDS} extra rounds to continue`}
-        </p>
+        </span>
       )}
     </form>
   );

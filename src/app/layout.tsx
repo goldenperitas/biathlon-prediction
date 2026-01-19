@@ -39,9 +39,14 @@ export default async function RootLayout({
       >
         <header className="border-b border-zinc-200 dark:border-zinc-800">
           <nav className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link href={headerLink} className="font-semibold">
-              Hit or Miss
-            </Link>
+            <div className="flex items-center">
+              <Link href={headerLink} className="text-xl text-zinc-900 dark:text-zinc-100">
+                HIT<span className="text-zinc-500 dark:text-zinc-500">OR</span>MISS
+              </Link>
+              <span className="hidden md:block text-sm text-zinc-400 dark:text-zinc-500 ms-2 pt-0.5">
+                The Biathlon Prediction Game
+              </span>
+            </div>
             <AuthButton />
           </nav>
         </header>
